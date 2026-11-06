@@ -1,0 +1,142 @@
+{
+  "passed": 34,
+  "failed": 0,
+  "checks": [
+    {
+      "label": "390: 最初の表示で3段・料金・見本ボタンが読める",
+      "passed": true
+    },
+    {
+      "label": "390/00-entry: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "390: 見本を一押しで入力し、遅いAI接続通知でも方法が変わらない",
+      "passed": true
+    },
+    {
+      "label": "390/01-write: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "390: 見本の確認画面はAIを使わないと明示",
+      "passed": true
+    },
+    {
+      "label": "390/01-confirm: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "390: ②で現在地と後回しの進み方が分かる",
+      "passed": true
+    },
+    {
+      "label": "390/02-questions: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "390: ③に下書きと戻り先がある",
+      "passed": true
+    },
+    {
+      "label": "390/03-draft: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "390/03-next-actions: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "390: 最初に戻っても下書きは残る",
+      "passed": true
+    },
+    {
+      "label": "390: 自分の入力へ切り替えると見本が空欄になる",
+      "passed": true
+    },
+    {
+      "label": "390: AIを動かすボタンは料金と同意の近くで明示",
+      "passed": true
+    },
+    {
+      "label": "390/ai-confirm: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "390: 本人が書いた文は再開しても消さない",
+      "passed": true
+    },
+    {
+      "label": "390: 全行程で外部送信・POST・画面エラーがゼロ",
+      "passed": true
+    },
+    {
+      "label": "1280: 最初の表示で3段・料金・見本ボタンが読める",
+      "passed": true
+    },
+    {
+      "label": "1280/00-entry: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "1280: 見本を一押しで入力し、遅いAI接続通知でも方法が変わらない",
+      "passed": true
+    },
+    {
+      "label": "1280/01-write: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "1280: 見本の確認画面はAIを使わないと明示",
+      "passed": true
+    },
+    {
+      "label": "1280/01-confirm: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "1280: ②で現在地と後回しの進み方が分かる",
+      "passed": true
+    },
+    {
+      "label": "1280/02-questions: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "1280: ③に下書きと戻り先がある",
+      "passed": true
+    },
+    {
+      "label": "1280/03-draft: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "1280/03-next-actions: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "1280: 最初に戻っても下書きは残る",
+      "passed": true
+    },
+    {
+      "label": "1280: 自分の入力へ切り替えると見本が空欄になる",
+      "passed": true
+    },
+    {
+      "label": "1280: AIを動かすボタンは料金と同意の近くで明示",
+      "passed": true
+    },
+    {
+      "label": "1280/ai-confirm: 横にはみ出さない",
+      "passed": true
+    },
+    {
+      "label": "1280: 本人が書いた文は再開しても消さない",
+      "passed": true
+    },
+    {
+      "label": "1280: 全行程で外部送信・POST・画面エラーがゼロ",
+      "passed": true
+    }
+  ]
+}

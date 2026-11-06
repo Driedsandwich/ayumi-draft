@@ -1,0 +1,191 @@
+
+> ayumi-draft@1.0.0 eval
+> tsx eval/run.ts
+
+{
+  "mode": "mock",
+  "date": "2026-11-06T02:21:20.049Z",
+  "cases": 14,
+  "passedCases": 14,
+  "periods": {
+    "matched": 19,
+    "total": 19,
+    "ratio": 1,
+    "missing": 0
+  },
+  "fields": {
+    "matched": 133,
+    "total": 133,
+    "ratio": 1
+  },
+  "inventedPeriods": 0,
+  "inventedFacts": 0,
+  "ruleChecks": {
+    "matched": 12,
+    "total": 12
+  },
+  "failures": 0,
+  "thresholds": {
+    "periodRatio": 1,
+    "fieldRatio": 1,
+    "inventedPeriods": 0,
+    "inventedFacts": 0
+  },
+  "limitation": "合成例の一致率。引用の実在と抽出値の一致を検査するが、臨床的真偽や引用の意味・期間との対応を保証しない。実利用の性能ではない。",
+  "rows": [
+    {
+      "id": "01",
+      "title": "受診していない期間",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "02",
+      "title": "通院と現在",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 0,
+      "foundChecks": 0,
+      "calls": 0
+    },
+    {
+      "id": "03",
+      "title": "未記載の空白",
+      "expectedPeriods": 2,
+      "actualPeriods": 2,
+      "matchingCells": 14,
+      "totalCells": 14,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "04",
+      "title": "期間の重なり",
+      "expectedPeriods": 2,
+      "actualPeriods": 2,
+      "matchingCells": 14,
+      "totalCells": 14,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "05",
+      "title": "日付が逆",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "06",
+      "title": "初診日より前の受診",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "07",
+      "title": "受診先が不明",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "08",
+      "title": "年月のみ",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "09",
+      "title": "学年と相対日付",
+      "expectedPeriods": 2,
+      "actualPeriods": 2,
+      "matchingCells": 14,
+      "totalCells": 14,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "10",
+      "title": "長期の未受診",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "11",
+      "title": "転院と連続する期間",
+      "expectedPeriods": 2,
+      "actualPeriods": 2,
+      "matchingCells": 14,
+      "totalCells": 14,
+      "expectedChecks": 0,
+      "foundChecks": 0,
+      "calls": 0
+    },
+    {
+      "id": "12",
+      "title": "和暦と退職",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 0,
+      "foundChecks": 0,
+      "calls": 0
+    },
+    {
+      "id": "13",
+      "title": "実在しない日付",
+      "expectedPeriods": 1,
+      "actualPeriods": 1,
+      "matchingCells": 7,
+      "totalCells": 7,
+      "expectedChecks": 1,
+      "foundChecks": 1,
+      "calls": 0
+    },
+    {
+      "id": "14",
+      "title": "ISO日付と未記載欄",
+      "expectedPeriods": 2,
+      "actualPeriods": 2,
+      "matchingCells": 14,
+      "totalCells": 14,
+      "expectedChecks": 2,
+      "foundChecks": 2,
+      "calls": 0
+    }
+  ]
+}

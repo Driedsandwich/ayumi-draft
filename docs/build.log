@@ -1,0 +1,21 @@
+
+> ayumi-draft@1.0.0 build
+> tsc --noEmit && vite build && npm run bundle:api
+
+vite v6.4.5 building for production...
+transforming...
+✓ 48 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.53 kB │ gzip:  0.40 kB
+dist/assets/index-DdiM76xp.css   20.11 kB │ gzip:  4.79 kB
+dist/assets/index-Dr21fXc9.js   289.46 kB │ gzip: 90.80 kB
+✓ built in 1.71s
+
+> ayumi-draft@1.0.0 bundle:api
+> esbuild server/vercel-entry.ts --bundle --platform=node --format=esm --target=node22 --outfile=api/analyze.js
+
+
+  api/analyze.js  20.8kb
+
+⚡ Done in 6ms

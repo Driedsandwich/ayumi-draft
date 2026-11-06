@@ -1,0 +1,12 @@
+
+> ayumi-draft@1.0.0 test
+> vitest run
+
+
+ RUN  v4.1.12 <作業機>
+
+
+ Test Files  2 passed (2)
+      Tests  68 passed (68)
+   Start at  11:27:10
+   Duration  1.12s (transform 701ms, setup 0ms, import 991ms, tests 318ms, environment 0ms)

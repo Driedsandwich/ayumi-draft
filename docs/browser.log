@@ -1,0 +1,33 @@
+
+> ayumi-draft@1.0.0 verify:ui
+> playwright test
+
+
+Running 20 tests using 1 worker
+
+(node:432620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [desktop] › e2e/app.spec.ts:46:3 › 見本1の最後まで・保存・印刷 (1.9s)
+  ✓   2 [desktop] › e2e/app.spec.ts:46:3 › 見本2の最後まで・保存・印刷 (1.3s)
+  ✓   3 [desktop] › e2e/app.spec.ts:46:3 › 見本3の最後まで・保存・印刷 (1.3s)
+  ✓   4 [desktop] › e2e/app.spec.ts:105:1 › 未知の入力・聞き返しへの回答と再検査 (1.3s)
+  ✓   5 [desktop] › e2e/app.spec.ts:135:1 › 削除した情報が再読込で戻らない (712ms)
+  ✓   6 [desktop] › e2e/app.spec.ts:148:1 › AI送信の同意と通信エラーで前の下書きを保持 (988ms)
+  ✓   7 [desktop] › e2e/app.spec.ts:192:1 › 本番経路の応答をブラウザーでも検査 (578ms)
+  ✓   8 [desktop] › e2e/app.spec.ts:220:1 › 壊れた保存内容から復帰 (505ms)
+  ✓   9 [desktop] › e2e/app.spec.ts:231:1 › 途中の別回答と期間編集の文も保存する (1.5s)
+  ✓  10 [desktop] › e2e/app.spec.ts:271:1 › 中止後の遅い応答で削除内容が復活しない (875ms)
+(node:432939) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  11 [mobile] › e2e/app.spec.ts:46:3 › 見本1の最後まで・保存・印刷 (1.0s)
+  ✓  12 [mobile] › e2e/app.spec.ts:46:3 › 見本2の最後まで・保存・印刷 (749ms)
+  ✓  13 [mobile] › e2e/app.spec.ts:46:3 › 見本3の最後まで・保存・印刷 (845ms)
+  ✓  14 [mobile] › e2e/app.spec.ts:105:1 › 未知の入力・聞き返しへの回答と再検査 (898ms)
+  ✓  15 [mobile] › e2e/app.spec.ts:135:1 › 削除した情報が再読込で戻らない (699ms)
+  ✓  16 [mobile] › e2e/app.spec.ts:148:1 › AI送信の同意と通信エラーで前の下書きを保持 (947ms)
+  ✓  17 [mobile] › e2e/app.spec.ts:192:1 › 本番経路の応答をブラウザーでも検査 (544ms)
+  ✓  18 [mobile] › e2e/app.spec.ts:220:1 › 壊れた保存内容から復帰 (483ms)
+  ✓  19 [mobile] › e2e/app.spec.ts:231:1 › 途中の別回答と期間編集の文も保存する (1.5s)
+  ✓  20 [mobile] › e2e/app.spec.ts:271:1 › 中止後の遅い応答で削除内容が復活しない (889ms)
+
+  20 passed (21.2s)

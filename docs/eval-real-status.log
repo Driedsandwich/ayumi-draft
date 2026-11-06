@@ -1,0 +1,5 @@
+
+> ayumi-draft@1.0.0 eval:real
+> tsx eval/run.ts --real
+
+本物の評価は未確認です。AI_PROVIDER=openai と接続先・モデル・鍵の環境変数を設定してください。

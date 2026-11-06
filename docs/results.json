@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-06",
+  "node": "22.23.4",
+  "npm": "10.9.9",
+  "unit": {
+    "passed": 68,
+    "failed": 0,
+    "files": 2
+  },
+  "build": {
+    "exitCode": 0,
+    "typescript": true,
+    "vite": true,
+    "apiBundle": true
+  },
+  "evaluation": {
+    "casesPassed": 14,
+    "casesTotal": 14,
+    "periodsMatched": 19,
+    "periodsTotal": 19,
+    "fieldsMatched": 133,
+    "fieldsTotal": 133,
+    "ruleChecksMatched": 12,
+    "ruleChecksTotal": 12,
+    "missingPeriods": 0,
+    "inventedPeriods": 0,
+    "inventedFacts": 0
+  },
+  "browser": {
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "desktop": 10,
+    "mobile": 10
+  },
+  "design": {
+    "passed": 27,
+    "failed": 0
+  },
+  "onboarding": {
+    "passed": 34,
+    "failed": 0,
+    "samplePostRequests": 0,
+    "externalRequests": 0,
+    "pageErrors": 0
+  },
+  "bundleSmoke": {
+    "passed": 1,
+    "failed": 0
+  },
+  "protectedFiles": {
+    "unchanged": 21,
+    "total": 21
+  },
+  "screenshots": {
+    "widths": [
+      390,
+      1280
+    ],
+    "count": 28,
+    "viewports": 14,
+    "fullPages": 14
+  },
+  "realAI": {
+    "status": "not_run",
+    "reason": "外部送信をしない指示のため。AIの画面確認はブラウザー内の模擬応答。"
+  },
+  "deployment": false,
+  "newDependencies": 0
+}

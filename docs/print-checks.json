@@ -1,0 +1,9 @@
+{
+  "pages": 3,
+  "sourceRows": 3,
+  "allThreeSources": true,
+  "consultation": true,
+  "firstVisit": true,
+  "backPageMemo": true,
+  "review": true
+}

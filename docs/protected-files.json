@@ -1,0 +1,111 @@
+{
+  "files": 21,
+  "allUnchanged": true,
+  "entries": [
+    {
+      "path": "api/analyze.js",
+      "unchanged": true,
+      "sha256": "f76b0cbfbffce21346097f605537ca25271bc388d257ca63e5b5dbfb689a562b"
+    },
+    {
+      "path": "eval/cases.json",
+      "unchanged": true,
+      "sha256": "a2ed4d83ec5801ccb7ac98b2fde88d1568b4883b0705acf9992cab98527544e4"
+    },
+    {
+      "path": "eval/run.ts",
+      "unchanged": true,
+      "sha256": "c0f6d61c345232d31b67011c2dc2a5ab27372a0896fb368178383f5249675f92"
+    },
+    {
+      "path": "package-lock.json",
+      "unchanged": true,
+      "sha256": "899de03a413b0323af1eb91e742766041f0cbeb72738f69758094ab345427ac8"
+    },
+    {
+      "path": "package.json",
+      "unchanged": true,
+      "sha256": "95dda467ea3d0c56af0a086a1de5a3e6454e6f2ce7e52941e0bd80e10282e385"
+    },
+    {
+      "path": "playwright.config.ts",
+      "unchanged": true,
+      "sha256": "34c7c0dee500ca86e94f274a473771a7a5e06d6a0c201c1180e530fcaf936041"
+    },
+    {
+      "path": "server/http.ts",
+      "unchanged": true,
+      "sha256": "3447435c78e6e5862db53bdfe906221d13d4c4794426196653dd554bebddd586"
+    },
+    {
+      "path": "server/providers.ts",
+      "unchanged": true,
+      "sha256": "767f52982d54fb78ba7f5b35e8e357ea8d4ad93ca2f5d0a23037044d125993a5"
+    },
+    {
+      "path": "server/vercel-entry.ts",
+      "unchanged": true,
+      "sha256": "a8657d94a131f439e1f05518107391d5bf667c80dc4abefde6f61e40de081c1b"
+    },
+    {
+      "path": "src/client/storage.ts",
+      "unchanged": true,
+      "sha256": "873326ae504f425a21dcb0be9777cb1c7a35a51bf52fa1c820ad390fd18d5468"
+    },
+    {
+      "path": "src/config/samples.ts",
+      "unchanged": true,
+      "sha256": "06d1746a16e32797f61919f6478bbf8e3b0bcbfdc756ee1d9cf1da9af73f4be7"
+    },
+    {
+      "path": "src/core/care.ts",
+      "unchanged": true,
+      "sha256": "5cd075d684e3a1337c7a4abd38e4f73eb9b2e60aef9a7ee018eeba36ecdc8dfd"
+    },
+    {
+      "path": "src/core/dates.ts",
+      "unchanged": true,
+      "sha256": "3d8ff1435db5465feefb63db737d0fdb5d694841ea502d4ac1382722a04482e8"
+    },
+    {
+      "path": "src/core/mock.ts",
+      "unchanged": true,
+      "sha256": "f06d726d59eb5ad0ae9e4df3e7a8f71b893d4e94de23457c27ca1e0b68fcedce"
+    },
+    {
+      "path": "src/core/pipeline.ts",
+      "unchanged": true,
+      "sha256": "a3d76c8f65cd55c36914b842e45edef90eefa372dfa9d1c1449bb7cf915c1342"
+    },
+    {
+      "path": "src/core/rules.ts",
+      "unchanged": true,
+      "sha256": "2ed2b60c7ecb5f0e31663533b59982d66bc657ca8cdccb488c929e2bf4ae68c6"
+    },
+    {
+      "path": "src/core/schema.ts",
+      "unchanged": true,
+      "sha256": "c24c186269f3878e0e940a7034b7d2e0b8ffdee54f5e21a6e172e37eac23b22e"
+    },
+    {
+      "path": "src/core/sources.ts",
+      "unchanged": true,
+      "sha256": "0b791e705d5c05cc059750f22e53a35d609dc79a28ab6113d77120fee9ddf740"
+    },
+    {
+      "path": "src/core/types.ts",
+      "unchanged": true,
+      "sha256": "774cab12a5abc31ccf8bfb65dbe69dd359dc609293c02cb465a5cf5aa755ca94"
+    },
+    {
+      "path": "tests/core.test.ts",
+      "unchanged": true,
+      "sha256": "ccc5b33d2f888dbecf45a7b2e57db48bb045a942af1ea1eb3703783b788ccbce"
+    },
+    {
+      "path": "tests/server.test.ts",
+      "unchanged": true,
+      "sha256": "6b7e0b5d6a5d03c3036798e3afbf9767469c908dae4a86bcfedf72979de25826"
+    }
+  ]
+}

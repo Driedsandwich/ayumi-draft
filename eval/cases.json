@@ -1,0 +1,420 @@
+[
+  {
+    "id": "01",
+    "title": "受診していない期間",
+    "synthetic": true,
+    "text": "2020年4月1日から2021年3月31日まで、受診していない。家事は家族に頼んだ。仕事は休んでいた。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2020年4月1日",
+        "end": "2021年3月31日",
+        "care": "no",
+        "hospital": null,
+        "daily": "家事は家族に頼んだ",
+        "work": "仕事は休んでいた",
+        "treatment": "受診していない"
+      }
+    ],
+    "expectedIssues": [
+      "trailing-gap"
+    ]
+  },
+  {
+    "id": "02",
+    "title": "通院と現在",
+    "synthetic": true,
+    "text": "2024年4月1日から現在まで、青葉クリニックに通院している。食事は自分で作っている。週2日の仕事をしている。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2024年4月1日",
+        "end": "現在",
+        "care": "yes",
+        "hospital": "青葉クリニック",
+        "daily": "食事は自分で作っている",
+        "work": "週2日の仕事をしている",
+        "treatment": "青葉クリニックに通院している"
+      }
+    ],
+    "expectedIssues": []
+  },
+  {
+    "id": "03",
+    "title": "未記載の空白",
+    "synthetic": true,
+    "text": "2019年1月1日から2019年12月31日まで、あお病院に通院していた。外出は家族と一緒だった。仕事はしていなかった。\n2022年1月1日から現在まで、あお病院に通院している。家事を手伝ってもらう。短時間の仕事をしている。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2019年1月1日",
+        "end": "2019年12月31日",
+        "care": "yes",
+        "hospital": "あお病院",
+        "daily": "外出は家族と一緒だった",
+        "work": "仕事はしていなかった",
+        "treatment": "あお病院に通院していた"
+      },
+      {
+        "start": "2022年1月1日",
+        "end": "現在",
+        "care": "yes",
+        "hospital": "あお病院",
+        "daily": "家事を手伝ってもらう",
+        "work": "短時間の仕事をしている",
+        "treatment": "あお病院に通院している"
+      }
+    ],
+    "expectedIssues": [
+      "gap"
+    ]
+  },
+  {
+    "id": "04",
+    "title": "期間の重なり",
+    "synthetic": true,
+    "text": "2020年1月1日から2021年12月31日まで、受診していない。外出が難しかった。無職だった。\n2021年6月1日から現在まで、はる病院に通院している。買い物は家族に頼む。仕事は休職している。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2020年1月1日",
+        "end": "2021年12月31日",
+        "care": "no",
+        "hospital": null,
+        "daily": "外出が難しかった",
+        "work": "無職だった",
+        "treatment": "受診していない"
+      },
+      {
+        "start": "2021年6月1日",
+        "end": "現在",
+        "care": "yes",
+        "hospital": "はる病院",
+        "daily": "買い物は家族に頼む",
+        "work": "仕事は休職している",
+        "treatment": "はる病院に通院している"
+      }
+    ],
+    "expectedIssues": [
+      "overlap"
+    ]
+  },
+  {
+    "id": "05",
+    "title": "日付が逆",
+    "synthetic": true,
+    "text": "2023年5月1日から2022年4月30日まで、はる病院に通院していた。朝起きるのが難しかった。仕事を休んでいた。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2023年5月1日",
+        "end": "2022年4月30日",
+        "care": "yes",
+        "hospital": "はる病院",
+        "daily": "朝起きるのが難しかった",
+        "work": "仕事を休んでいた",
+        "treatment": "はる病院に通院していた"
+      }
+    ],
+    "expectedIssues": [
+      "reverse"
+    ]
+  },
+  {
+    "id": "06",
+    "title": "初診日より前の受診",
+    "synthetic": true,
+    "text": "2018年4月1日から2019年3月31日まで、みどり医院に通院していた。食事を家族に頼んだ。無職だった。",
+    "context": {
+      "firstVisit": "2020-01-01",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2018年4月1日",
+        "end": "2019年3月31日",
+        "care": "yes",
+        "hospital": "みどり医院",
+        "daily": "食事を家族に頼んだ",
+        "work": "無職だった",
+        "treatment": "みどり医院に通院していた"
+      }
+    ],
+    "expectedIssues": [
+      "before-first"
+    ]
+  },
+  {
+    "id": "07",
+    "title": "受診先が不明",
+    "synthetic": true,
+    "text": "2025年1月1日から現在まで、通院している。家事を手伝ってもらう。仕事はしていない。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2025年1月1日",
+        "end": "現在",
+        "care": "yes",
+        "hospital": null,
+        "daily": "家事を手伝ってもらう",
+        "work": "仕事はしていない",
+        "treatment": "通院している"
+      }
+    ],
+    "expectedIssues": [
+      "hospital-missing"
+    ]
+  },
+  {
+    "id": "08",
+    "title": "年月のみ",
+    "synthetic": true,
+    "text": "2021年4月から2022年3月まで、受診していない。食事は家族が作った。仕事は休職していた。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2021年4月",
+        "end": "2022年3月",
+        "care": "no",
+        "hospital": null,
+        "daily": "食事は家族が作った",
+        "work": "仕事は休職していた",
+        "treatment": "受診していない"
+      }
+    ],
+    "expectedIssues": [
+      "date-partial"
+    ]
+  },
+  {
+    "id": "09",
+    "title": "学年と相対日付",
+    "synthetic": true,
+    "text": "高2の秋から朝起きられなくなった。学校を休んだ。\n高3の5月に、さくらクリニックを初めて受診した。卒業後に就職したが半年で辞めた。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": null,
+        "end": null,
+        "care": "unknown",
+        "hospital": null,
+        "daily": "高2の秋から朝起きられなくなった。学校を休んだ",
+        "work": "学校を休んだ",
+        "treatment": null
+      },
+      {
+        "start": null,
+        "end": null,
+        "care": "yes",
+        "hospital": "さくらクリニック",
+        "daily": null,
+        "work": "卒業後に就職したが半年で辞めた",
+        "treatment": "さくらクリニックを初めて受診した"
+      }
+    ],
+    "expectedIssues": [
+      "date-missing"
+    ]
+  },
+  {
+    "id": "10",
+    "title": "長期の未受診",
+    "synthetic": true,
+    "text": "2010年1月1日から2020年12月31日まで、受診していない。家事は家族に頼んだ。無職だった。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2010年1月1日",
+        "end": "2020年12月31日",
+        "care": "no",
+        "hospital": null,
+        "daily": "家事は家族に頼んだ",
+        "work": "無職だった",
+        "treatment": "受診していない"
+      }
+    ],
+    "expectedIssues": [
+      "long"
+    ]
+  },
+  {
+    "id": "11",
+    "title": "転院と連続する期間",
+    "synthetic": true,
+    "text": "2020年1月1日から2021年12月31日まで、青葉クリニックに通院していた。外出は家族と一緒だった。事務の仕事をしていた。\n2022年1月1日から現在まで、はる病院に通院している。食事の準備を手伝ってもらう。退職して無職だった。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2020年1月1日",
+        "end": "2021年12月31日",
+        "care": "yes",
+        "hospital": "青葉クリニック",
+        "daily": "外出は家族と一緒だった",
+        "work": "事務の仕事をしていた",
+        "treatment": "青葉クリニックに通院していた"
+      },
+      {
+        "start": "2022年1月1日",
+        "end": "現在",
+        "care": "yes",
+        "hospital": "はる病院",
+        "daily": "食事の準備を手伝ってもらう",
+        "work": "退職して無職だった",
+        "treatment": "はる病院に通院している"
+      }
+    ],
+    "expectedIssues": []
+  },
+  {
+    "id": "12",
+    "title": "和暦と退職",
+    "synthetic": true,
+    "text": "令和2年4月1日から令和3年3月31日まで、みどり医院に通院していた。家事の後は横になった。就職したが退職した。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "令和2年4月1日",
+        "end": "令和3年3月31日",
+        "care": "yes",
+        "hospital": "みどり医院",
+        "daily": "家事の後は横になった",
+        "work": "就職したが退職した",
+        "treatment": "みどり医院に通院していた"
+      }
+    ],
+    "expectedIssues": []
+  },
+  {
+    "id": "13",
+    "title": "実在しない日付",
+    "synthetic": true,
+    "text": "2021年2月30日から2022年3月1日まで、受診していない。外出が難しかった。仕事はしていない。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2021年2月30日",
+        "end": "2022年3月1日",
+        "care": "no",
+        "hospital": null,
+        "daily": "外出が難しかった",
+        "work": "仕事はしていない",
+        "treatment": "受診していない"
+      }
+    ],
+    "expectedIssues": [
+      "date-missing"
+    ]
+  },
+  {
+    "id": "14",
+    "title": "ISO日付と未記載欄",
+    "synthetic": true,
+    "text": "2022-04-01から2022-09-30まで、受診していない。\n2022-10-01から現在まで、さくらクリニックに通院している。",
+    "context": {
+      "firstVisit": "",
+      "onset": "",
+      "currentHospital": "",
+      "illness": "",
+      "today": "2026-11-06"
+    },
+    "expected": [
+      {
+        "start": "2022-04-01",
+        "end": "2022-09-30",
+        "care": "no",
+        "hospital": null,
+        "daily": null,
+        "work": null,
+        "treatment": "受診していない"
+      },
+      {
+        "start": "2022-10-01",
+        "end": "現在",
+        "care": "yes",
+        "hospital": "さくらクリニック",
+        "daily": null,
+        "work": null,
+        "treatment": "さくらクリニックに通院している"
+      }
+    ],
+    "expectedIssues": [
+      "daily-missing",
+      "work-missing"
+    ]
+  }
+]

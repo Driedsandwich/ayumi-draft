@@ -1,0 +1,114 @@
+{
+  "passed": 27,
+  "failed": 0,
+  "checks": [
+    {
+      "label": "1280/entry: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "1280: first screen explains purpose and sample entry",
+      "passed": true
+    },
+    {
+      "label": "1280: only one question; gap is explicitly unconfirmed",
+      "passed": true
+    },
+    {
+      "label": "1280/question: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "1280: radio answer restores without creating a period",
+      "passed": true
+    },
+    {
+      "label": "1280/draft: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "1280: print keeps the table and all review items",
+      "passed": true
+    },
+    {
+      "label": "1280/input: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "1280: rest message shown only with successful saving",
+      "passed": true
+    },
+    {
+      "label": "1280: selected period and unfinished note resume",
+      "passed": true
+    },
+    {
+      "label": "1280: period edit uses the existing patch flow",
+      "passed": true
+    },
+    {
+      "label": "1280: deferred gap can be reopened from the timeline",
+      "passed": true
+    },
+    {
+      "label": "1280: no console errors, external requests, or health-data POSTs",
+      "passed": true
+    },
+    {
+      "label": "390/entry: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "390: first screen explains purpose and sample entry",
+      "passed": true
+    },
+    {
+      "label": "390: only one question; gap is explicitly unconfirmed",
+      "passed": true
+    },
+    {
+      "label": "390/question: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "390: radio answer restores without creating a period",
+      "passed": true
+    },
+    {
+      "label": "390/draft: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "390: print keeps the table and all review items",
+      "passed": true
+    },
+    {
+      "label": "390/input: page has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "label": "390: rest message shown only with successful saving",
+      "passed": true
+    },
+    {
+      "label": "390: selected period and unfinished note resume",
+      "passed": true
+    },
+    {
+      "label": "390: period edit uses the existing patch flow",
+      "passed": true
+    },
+    {
+      "label": "390: deferred gap can be reopened from the timeline",
+      "passed": true
+    },
+    {
+      "label": "390: no console errors, external requests, or health-data POSTs",
+      "passed": true
+    },
+    {
+      "label": "storage failure: successful save indicator absent",
+      "passed": true
+    }
+  ]
+}
