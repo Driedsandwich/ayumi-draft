@@ -2,7 +2,7 @@
 
 話すように書いた経過を整理して、障害年金の「病歴・就労状況等申立書」の下書きを作る Web アプリです。
 
-- 公開デモ：<https://x160-moushitate.vercel.app>（2026-11-06 時点で実 AI に接続した構成）
+- 公開デモ：<https://ayumi-draft.vercel.app>（2026-11-06 時点で実 AI に接続した構成）
 - 東京AIハッカソン 2026 のために作りました。
 - AI の鍵（API キー）がなくても、手元では見本の応答（mock）で最後まで動きます。動かし方は下の節にあります。
 - ライセンス：MIT（[LICENSE](LICENSE)）。`docs/form.pdf`・`docs/form-1.png`・`docs/form-2.png` は日本年金機構の様式の確認用の写しで、提供元の条件に従います（MIT の対象外）。
