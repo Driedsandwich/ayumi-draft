@@ -1,10 +1,13 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
+import { randomBytes } from "node:crypto";
 import { createServer, type Server } from "node:http";
 import { handler, rateTicket, ipTicket } from "../server/http";
 import { createProvider } from "../server/providers";
 const servers: Server[] = [];
 afterEach(async () => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   await Promise.all(
     servers.splice(0).map(
       (s) =>
@@ -21,6 +24,14 @@ async function serve() {
   servers.push(s);
   await new Promise<void>((r) => s.listen(0, "127.0.0.1", r));
   return `http://127.0.0.1:${(s.address() as { port: number }).port}`;
+}
+const destination = "https://synthetic-test.example";
+function configurePaidProvider() {
+  vi.stubEnv("AI_PROVIDER", "openai");
+  vi.stubEnv("AI_BASE_URL", `${destination}/v1`);
+  vi.stubEnv("AI_MODEL", "configured-model");
+  vi.stubEnv("AI_API_KEY", "x");
+  vi.stubEnv("RATE_LIMIT_SECRET", randomBytes(32).toString("hex"));
 }
 describe("回数制限", () => {
   it("署名cookieで上限", () => {
@@ -103,6 +114,74 @@ describe("HTTP", () => {
       body: JSON.stringify({ kind: "extract", text: "経過" }),
     });
     expect(r.status).toBe(503);
+  });
+  it("本人が確認した送り先に一致するときだけAIへ渡す", async () => {
+    const base = await serve();
+    configurePaidProvider();
+    const request = fetch;
+    const upstream = vi.fn(async () => new Response("", { status: 503 }));
+    vi.stubGlobal("fetch", upstream);
+    const r = await request(base, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Ayumi-Destination": "https://previous-test.example",
+      },
+      body: JSON.stringify({ kind: "extract", text: "合成例" }),
+    });
+    expect(r.status).toBe(409);
+    expect(upstream).not.toHaveBeenCalled();
+  });
+  it("同じ窓の有料AI呼び出しには再検査も含めた合計上限がある", async () => {
+    const base = await serve();
+    configurePaidProvider();
+    vi.stubEnv("AI_CALL_RATE_MAX", "2");
+    const start = 60_001_000;
+    const now = vi.spyOn(Date, "now").mockReturnValue(start);
+    const request = fetch;
+    const text = "合成例";
+    const item = { value: null, quote: "" };
+    const row = {
+      sourceQuote: text,
+      start: item,
+      end: item,
+      care: item,
+      hospital: item,
+      daily: item,
+      work: item,
+      treatment: item,
+    };
+    const upstream = vi
+      .fn(async () =>
+        Response.json({
+          choices: [
+            { message: { content: JSON.stringify({ events: [row] }) } },
+          ],
+        }),
+      )
+      .mockImplementationOnce(async () => new Response("{}"));
+    vi.stubGlobal("fetch", upstream);
+    const submit = (cookie = "") =>
+      request(base, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Ayumi-Destination": destination,
+          Cookie: cookie,
+        },
+        body: JSON.stringify({ kind: "extract", text }),
+      });
+    const first = await submit();
+    expect(first.status).toBe(200);
+    expect((await first.json()).calls).toBe(2);
+    const cookie = first.headers.get("set-cookie")!.split(";")[0];
+    const second = await submit(cookie);
+    expect(second.status).toBe(429);
+    expect(Number(second.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(upstream).toHaveBeenCalledTimes(2);
+    now.mockReturnValue(start + 600_000);
+    expect((await submit(cookie)).status).toBe(200);
+    expect(upstream).toHaveBeenCalledTimes(3);
   });
 });
 describe("OpenAI互換provider", () => {

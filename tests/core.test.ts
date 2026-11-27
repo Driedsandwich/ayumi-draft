@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { parseDate, isOverFiveYears, splitSuggestion } from "../src/core/dates";
 import { mockExtract, mockProvider } from "../src/core/mock";
 import {
+  parseEvidence,
   parseExtraction,
   parsePatches,
   parseOperation,
@@ -338,6 +339,57 @@ describe("追加の境界・取り落とし防止", () => {
     raw.events[0].care.value = "yes";
     expect(() => parseExtraction(raw, text)).toThrow();
   });
+  it.each(["yes", "no"])(
+    "受診の根拠がない引用は未確認にする（%s）",
+    (value) => {
+      const text = "食事は家族に頼んだ。";
+      const result = parsePatches(
+        {
+          patches: [
+            { eventId: "e1", field: "care", evidence: { value, quote: text } },
+          ],
+        },
+        { kind: "answers", answers: [{ eventId: "e1", field: "care", text }] },
+      );
+      expect(result[0].evidence).toEqual({ value: "unknown", quote: text });
+    },
+  );
+  it("受診ありの明確な引用と矛盾する未受診は受け入れない", () => {
+    const text = "通院していた。";
+    expect(() =>
+      parseEvidence({ value: "no", quote: text }, "care", text),
+    ).toThrow();
+  });
+  it.each([
+    "前半は受診したが、後半は受診していない。",
+    "受診したかもしれない。",
+    "入院していない。",
+    "初診の予定がある。",
+  ])("混在・あいまいな受診の引用は未確認にする（%s）", (text) => {
+    const raw = mockExtract(text);
+    raw.events[0].care = { value: "yes", quote: text };
+    expect(parseExtraction(raw, text).events[0].care.value).toBe("unknown");
+  });
+  it("受診と未受診の明確な引用はその状態を保つ", () => {
+    for (const [value, text] of [
+      ["yes", "入院した。"],
+      ["no", "受診していない。"],
+    ]) {
+      expect(parseEvidence({ value, quote: text }, "care", text).value).toBe(
+        value,
+      );
+    }
+  });
+});
+
+it("長すぎる医療機関名は切り詰めず未確認のままにする", () => {
+  const name = "風".repeat(198) + "病院";
+  expect(mockExtract(`${name}に通院した。`).events[0].hospital.value).toBe(
+    name,
+  );
+  expect(mockExtract(`新${name}に通院した。`).events[0].hospital).toEqual(
+    empty(),
+  );
 });
 
 it("スラッシュの日付を原文のまま受け取り日付として照合", () => {

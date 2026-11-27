@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { mockExtract } from "../src/core/mock";
+import { fresh, storageKey } from "../src/client/storage";
 const source =
   "2023年4月1日から現在まで、ふたば医院に通院している。食事は家族が作る。仕事は休んでいる。";
 async function openSettings(page: Page) {
@@ -217,6 +218,129 @@ test("本番経路の応答をブラウザーでも検査", async ({ page }) => 
     .click();
   await expect(page.getByRole("heading", { name: "ひとつ確認" })).toBeVisible();
 });
+
+const firstDestination = "https://first-test.example";
+const secondDestination = "https://second-test.example";
+async function restoreLivePanel(page: Page) {
+  await page.addInitScript(
+    ({ key, state }) => localStorage.setItem(key, JSON.stringify(state)),
+    { key: storageKey, state: { ...fresh(), text: source, mode: "live" } },
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "内容を確認して進む" }).click();
+  return page.getByRole("region", { name: "整理する文を確認する" });
+}
+test("復元したAIの設定を待つ間は同意と送信が無効", async ({ page }) => {
+  let release!: () => void;
+  const ready = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/analyze", async (route) => {
+    await ready;
+    await route.fulfill({
+      json: { provider: "openai", destination: firstDestination },
+    });
+  });
+  const panel = await restoreLivePanel(page);
+  try {
+    await expect(panel.getByRole("checkbox")).toBeDisabled({ timeout: 1200 });
+    await expect(
+      panel.getByRole("button", { name: /^AI で読む/ }),
+    ).toBeDisabled();
+  } finally {
+    release();
+  }
+  await expect(panel).toContainText(firstDestination);
+  await expect(panel.getByRole("checkbox")).toBeEnabled();
+  await expect(panel.getByRole("checkbox")).not.toBeChecked();
+});
+test("AI設定を確認できなければ送信しない", async ({ page }) => {
+  let posts = 0;
+  await page.route("**/api/analyze", async (route) => {
+    if (route.request().method() === "POST") posts++;
+    await route.fulfill({ status: 503, json: {} });
+  });
+  const failed = page.waitForResponse((res) =>
+    res.url().endsWith("/api/analyze"),
+  );
+  const panel = await restoreLivePanel(page);
+  await failed;
+  const submit = panel.getByRole("button", { name: /^AI で読む/ });
+  await expect(panel.getByRole("checkbox")).toBeDisabled();
+  await expect(submit).toBeDisabled();
+  await submit.press("Enter");
+  expect(posts).toBe(0);
+});
+test("AIの送り先が変わったら同意を取り直す", async ({ page }) => {
+  let destination = firstDestination;
+  let posts = 0;
+  await page.route("**/api/analyze", async (route) => {
+    if (route.request().method() === "GET")
+      return route.fulfill({ json: { provider: "openai", destination } });
+    posts++;
+    return route.fulfill({ status: 503, json: {} });
+  });
+  const panel = await restoreLivePanel(page);
+  await expect(panel).toContainText(firstDestination);
+  await panel.getByRole("checkbox").check();
+  destination = secondDestination;
+  await panel.getByRole("button", { name: /^AI で読む/ }).click();
+  await expect(panel).toContainText(secondDestination, { timeout: 1800 });
+  await expect(panel.getByRole("checkbox")).not.toBeChecked();
+  await expect(
+    panel.getByRole("button", { name: /^AI で読む/ }),
+  ).toBeDisabled();
+  expect(posts).toBe(0);
+});
+test("同じ送り先を確認したときは整理できる", async ({ page }) => {
+  let posts = 0;
+  await page.route("**/api/analyze", async (route) => {
+    if (route.request().method() === "GET")
+      return route.fulfill({
+        json: { provider: "openai", destination: firstDestination },
+      });
+    posts++;
+    return route.fulfill({
+      json: { data: mockExtract(source), provider: "openai", calls: 1 },
+    });
+  });
+  const panel = await restoreLivePanel(page);
+  await expect(panel).toContainText(firstDestination);
+  await panel.getByRole("checkbox").check();
+  await panel.getByRole("button", { name: /^AI で読む/ }).click();
+  await expect(page.getByRole("heading", { name: "ひとつ確認" })).toBeVisible();
+  expect(posts).toBe(1);
+});
+
+test("回答の書き直しを保存すると古い回答は残らない", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("経過の文").fill(source);
+  await organize(page);
+  const oldAnswer = "洗濯物は家族に頼んだ";
+  const newAnswer = "掃除を少しずつ再開した";
+  for (const answer of [oldAnswer, newAnswer]) {
+    await page.getByRole("button", { name: "下書きを見る →" }).click();
+    await page.getByText("この期間の内容を直す", { exact: true }).click();
+    await page.getByLabel("直す欄").selectOption("daily");
+    await page.getByLabel("本人の言葉で書き直す").fill(answer);
+    await page.getByRole("button", { name: "変更内容を確かめる" }).click();
+    await page.getByRole("button", { name: /^この内容で整理する/ }).click();
+    await expect(
+      page.getByRole("heading", { name: "ひとつ確認" }),
+    ).toBeVisible();
+  }
+  const saved = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    storageKey,
+  );
+  expect(saved).toContain(newAnswer);
+  expect(saved).not.toContain(oldAnswer);
+  await page.reload();
+  await page.getByRole("button", { name: "下書きを見る →" }).click();
+  await expect(page.locator(".period")).toContainText(newAnswer);
+  await expect(page.locator(".period")).toContainText("ふたば医院");
+});
+
 test("壊れた保存内容から復帰", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => localStorage.setItem("ayumi-draft-v1", "{broken"));
