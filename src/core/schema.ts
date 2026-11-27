@@ -38,9 +38,12 @@ export function parseEvidence(
   if (field === "care") {
     if (!["yes", "no", "unknown"].includes(f.value))
       throw Error("受診の形が合いません。");
-    const signals = careSignals(f.quote);
-    if ((f.value === "yes" && signals.no) || (f.value === "no" && signals.yes))
-      throw Error("受診の引用に矛盾があります。");
+    if (f.value !== "unknown") {
+      const { yes, no, unclear } = careSignals(f.quote);
+      if (unclear || yes === no) return { value: "unknown", quote: f.quote };
+      if ((f.value === "yes") !== yes)
+        throw Error("受診の引用に矛盾があります。");
+    }
   } else if (!f.quote.includes(f.value)) throw Error("値が引用にありません。");
   return { value: f.value, quote: f.quote };
 }

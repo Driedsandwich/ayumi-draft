@@ -6,10 +6,15 @@ function careSignals(text) {
   const no = /(?:受診|通院)(?:していなかった|していない|しなかった|なし|せず)|未受診|病院には行かなかった/.test(
     text
   );
-  const yes = /(?:受診|通院)(?:した|していた|している|を続け|中)|初めて受診|初診|入院|診察を受け|病院に通|通っていた|通っています/.test(
+  const yes = /(?:受診|通院|入院)(?:した|していた|している|を続け(?:た|ていた|ている)|中(?!止|断))|初診(?:だった|した|を受けた)|診察を受け(?:た|ていた|ている)|通っていた|通っています/.test(
     text
   );
-  return { yes, no };
+  const unclear = (yes || no) && text.split(/[。！!\n；;]/).some(
+    (sentence) => /受診|通院|初診|入院|診察|通って/.test(sentence) && /かもしれ|かどうか|(?:した|していない)か[？?]|と思う|と思われ|らしい|ようだ|予定|つもり|検討|覚えていない|分からない|わからない|不明|未確認|とは限ら|では(?:ない|なく)|(?:中|した|していた|している)ことはない/.test(
+      sentence
+    )
+  );
+  return { yes, no, unclear };
 }
 
 // src/core/types.ts
@@ -44,9 +49,12 @@ function parseEvidence(v, field, source) {
   if (field === "care") {
     if (!["yes", "no", "unknown"].includes(f.value))
       throw Error("\u53D7\u8A3A\u306E\u5F62\u304C\u5408\u3044\u307E\u305B\u3093\u3002");
-    const signals = careSignals(f.quote);
-    if (f.value === "yes" && signals.no || f.value === "no" && signals.yes)
-      throw Error("\u53D7\u8A3A\u306E\u5F15\u7528\u306B\u77DB\u76FE\u304C\u3042\u308A\u307E\u3059\u3002");
+    if (f.value !== "unknown") {
+      const { yes, no, unclear } = careSignals(f.quote);
+      if (unclear || yes === no) return { value: "unknown", quote: f.quote };
+      if (f.value === "yes" !== yes)
+        throw Error("\u53D7\u8A3A\u306E\u5F15\u7528\u306B\u77DB\u76FE\u304C\u3042\u308A\u307E\u3059\u3002");
+    }
   } else if (!f.quote.includes(f.value)) throw Error("\u5024\u304C\u5F15\u7528\u306B\u3042\u308A\u307E\u305B\u3093\u3002");
   return { value: f.value, quote: f.quote };
 }
@@ -137,9 +145,9 @@ async function runOperation(op, provider) {
 // src/core/mock.ts
 var datePattern = /(?:昭和|平成|令和)(?:元|\d{1,2})年(?:\d{1,2}月)?(?:\d{1,2}日)?|\d{4}年(?:\d{1,2}月)?(?:\d{1,2}日)?|\d{4}[-/]\d{1,2}(?:[-/]\d{1,2})?|現在|今日/g;
 function care(s) {
-  const { yes, no } = careSignals(s);
+  const { yes, no, unclear } = careSignals(s);
   return {
-    value: yes && no ? "unknown" : no ? "no" : yes ? "yes" : "unknown",
+    value: unclear || yes === no ? "unknown" : yes ? "yes" : "no",
     quote: s
   };
 }
@@ -182,7 +190,7 @@ function mockExtract(text) {
         return first2 && last ? evidence(s.slice(first2.index, last.index + last[0].length).trim()) : empty();
       };
       const h = s.match(
-        /([A-Za-zＡ-Ｚａ-ｚ一-龠ぁ-んァ-ヶ〇ー]+(?:クリニック|病院|医院|診療所))/
+        /(?<![A-Za-zＡ-Ｚａ-ｚ一-龠ぁ-んァ-ヶ〇ー])[A-Za-zＡ-Ｚａ-ｚ一-龠ぁ-んァ-ヶ〇ー]+(?:クリニック|病院|医院|診療所)/
       );
       const period = {
         id: `e${i + 1}`,
@@ -190,7 +198,7 @@ function mockExtract(text) {
         start,
         end,
         care: care(s),
-        hospital: h ? evidence(h[1]) : empty(),
+        hospital: h && h[0].length <= 200 ? evidence(h[0]) : empty(),
         daily: find(
           /起き|眠|食事|家事|入浴|外出|買い物|生活|着替|学校|掃除|歩|痛|疲|不安|家族|介助|朝/
         ),
@@ -224,43 +232,51 @@ var instruction = `\u3042\u306A\u305F\u306F\u969C\u5BB3\u5E74\u91D1\u306E\u75C5\
 \u3059\u3079\u3066\u306E\u9805\u76EE\u306F {"value":\u6587\u5B57\u5217\u307E\u305F\u306Fnull,"quote":\u539F\u6587\u306E\u9023\u7D9A\u5F15\u7528}\u3002null\u306Equote\u306F\u7A7A\u6587\u5B57\u3067\u3059\u3002care\u4EE5\u5916\u306Evalue\u3082quote\u306B\u542B\u307E\u308C\u308B\u539F\u6587\u306E\u9023\u7D9A\u3057\u305F\u6587\u5B57\u5217\u3092\u30B3\u30D4\u30FC\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u8A00\u3044\u63DB\u3048\u7981\u6B62\u3002care\u3060\u3051\u306Fyes/no/unknown\u3002care\u306Equote\u306F\u305D\u306E\u72B6\u614B\u3092\u8FF0\u3079\u305F\u539F\u6587\u3002\u533B\u7642\u6A5F\u95A2\u304C\u5206\u304B\u3089\u306A\u3044\u5834\u5408\u306Fnull\u3002\u6CBB\u7642\u7D4C\u904E\u30FB\u53D7\u8A3A\u56DE\u6570\u30FB\u5165\u9662\u30FB\u8EE2\u9662/\u4E2D\u6B62\u306E\u7406\u7531\u30FB\u672A\u53D7\u8A3A\u7406\u7531\u306A\u3069\u306Ftreatment\u3002\u5B66\u6821/\u65E5\u5E38\u306E\u56F0\u308A\u3054\u3068\u306Fdaily\u3001\u4ED5\u4E8B/\u4F11\u8077/\u7121\u8077\u306E\u69D8\u5B50\u306Fwork\u3002\u540C\u3058\u8A18\u8FF0\u3092\u8907\u6570\u6B04\u306B\u5165\u308C\u3066\u3082\u3088\u3044\u3002\u660E\u793A\u3055\u308C\u306A\u3044\u6B04\u306Fnull\u3002
 kind=extract\u306E\u5834\u5408: {"events":[{"sourceQuote":"\u5F53\u8A72\u671F\u9593\u3092\u8FF0\u3079\u305F\u539F\u6587\u306E\u9023\u7D9A\u3057\u305F\u5F15\u7528","start":\u9805\u76EE,"end":\u9805\u76EE,"care":\u9805\u76EE,"hospital":\u9805\u76EE,"daily":\u9805\u76EE,"work":\u9805\u76EE,"treatment":\u9805\u76EE}]}\u3002\u5404\u9805\u76EE\u306Equote\u306F\u305D\u306EsourceQuote\u306E\u4E2D\u306B\u306A\u3051\u308C\u3070\u306A\u3089\u306A\u3044\u3002sourceQuote\u306F\u91CD\u8907\u7981\u6B62\u3002\u5168\u3066\u306E\u7D4C\u904E\u3092\u843D\u3068\u3055\u305A\u6700\u592760\u4EF6\u3002sourceQuote\u306E\u5916\u306E\u60C5\u5831\u3092\u6DF7\u305C\u306A\u3044\u3002
 kind=answers\u306E\u5834\u5408: {"patches":[{"eventId":"\u5165\u529B\u3068\u540C\u3058ID","field":"\u5165\u529B\u3068\u540C\u3058field","evidence":\u9805\u76EE}]}\u3002\u5404\u56DE\u7B54\u30921\u500B\u305A\u3064\u8FD4\u3057\u3001\u305D\u306E\u56DE\u7B54text\u3060\u3051\u304B\u3089\u62BD\u51FA\u3002\u5225\u306E\u671F\u9593\u3092\u5909\u3048\u306A\u3044\u3002\u300C\u5206\u304B\u3089\u306A\u3044\u300D\u300C\u7A7A\u6B04\u306B\u3059\u308B\u300D\u306Fnull\u3002care\u306E\u300C\u53D7\u8A3A\u3057\u305F\u300D\u306Fyes\u3001\u300C\u53D7\u8A3A\u3057\u3066\u3044\u306A\u3044\u300D\u306Fno\u3002`;
-function createProvider(env = process.env, fetcher = fetch) {
-  const name = env.AI_PROVIDER || "mock";
-  if (name === "mock") return mockProvider;
-  if (name !== "openai" || !env.AI_API_KEY || !env.AI_MODEL || !env.AI_BASE_URL)
+function openAiUrl(env) {
+  if (env.AI_PROVIDER !== "openai" || !env.AI_API_KEY || !env.AI_MODEL || !env.AI_BASE_URL)
     throw Error("AI \u306E\u63A5\u7D9A\u8A2D\u5B9A\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002");
   const url = new URL(env.AI_BASE_URL);
   if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash)
     throw Error("AI \u306E\u63A5\u7D9A\u5148\u306F HTTPS \u306E\u30D9\u30FC\u30B9 URL \u3092\u6307\u5B9A\u3057\u3066\u304F\u3060\u3055\u3044\u3002");
+  return url;
+}
+function getPaidDestination(env = process.env) {
+  try {
+    return openAiUrl(env).origin;
+  } catch {
+    return null;
+  }
+}
+function createProvider(env = process.env, fetcher = fetch) {
+  if (!env.AI_PROVIDER || env.AI_PROVIDER === "mock") return mockProvider;
+  const endpoint = `${openAiUrl(env).href.replace(/\/$/, "")}/chat/completions`;
   const deadline = Date.now() + 46e3;
   return {
     name: "openai",
     async complete(op, repair) {
       const remaining = deadline - Date.now();
       if (remaining <= 0) throw Error("AI \u306E\u5F85\u3061\u6642\u9593\u3092\u8D85\u3048\u307E\u3057\u305F\u3002");
-      const res = await fetcher(
-        `${env.AI_BASE_URL.replace(/\/$/, "")}/chat/completions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${env.AI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: env.AI_MODEL,
-            response_format: { type: "json_object" },
-            max_tokens: 12e3,
-            messages: [
-              {
-                role: "system",
-                content: instruction + (repair ? "\n\u524D\u306E\u51FA\u529B\u306F\u5F62\u5F0F\u307E\u305F\u306F\u5F15\u7528\u306E\u691C\u67FB\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u6307\u5B9A\u5F62\u3067\u539F\u6587\u306E\u307F\u3092\u518D\u62BD\u51FA\u3057\u3066\u304F\u3060\u3055\u3044\u3002" : "")
-              },
-              { role: "user", content: JSON.stringify(op) }
-            ]
-          }),
-          signal: AbortSignal.timeout(Math.min(remaining, 23e3))
-        }
-      );
+      const res = await fetcher(endpoint, {
+        method: "POST",
+        redirect: "error",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${env.AI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: env.AI_MODEL,
+          response_format: { type: "json_object" },
+          max_tokens: 12e3,
+          messages: [
+            {
+              role: "system",
+              content: instruction + (repair ? "\n\u524D\u306E\u51FA\u529B\u306F\u5F62\u5F0F\u307E\u305F\u306F\u5F15\u7528\u306E\u691C\u67FB\u306B\u5931\u6557\u3057\u307E\u3057\u305F\u3002\u6307\u5B9A\u5F62\u3067\u539F\u6587\u306E\u307F\u3092\u518D\u62BD\u51FA\u3057\u3066\u304F\u3060\u3055\u3044\u3002" : "")
+            },
+            { role: "user", content: JSON.stringify(op) }
+          ]
+        }),
+        signal: AbortSignal.timeout(Math.min(remaining, 23e3))
+      });
       if (!res.ok)
         throw Error(
           "AI \u306B\u63A5\u7D9A\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u5C11\u3057\u5F85\u3063\u3066\u304B\u3089\u304A\u8A66\u3057\u304F\u3060\u3055\u3044\u3002"
@@ -296,9 +312,10 @@ function createProvider(env = process.env, fetcher = fetch) {
 
 // server/http.ts
 var maxBody = 8e4;
+var windowMs = 6e5;
 var windows = /* @__PURE__ */ new Map();
 function ipTicket(key, max, now = Date.now()) {
-  const window = Math.floor(now / 6e5);
+  const window = Math.floor(now / windowMs);
   const prev = windows.get(key);
   const count = prev?.window === window ? prev.count + 1 : 1;
   if (windows.size >= 5e3) {
@@ -307,6 +324,25 @@ function ipTicket(key, max, now = Date.now()) {
   }
   windows.set(key, { window, count });
   return count <= max;
+}
+var paidWindow = -1;
+var paidCalls = 0;
+var PaidCallLimit = class extends Error {
+  constructor(retryAfter) {
+    super();
+    this.retryAfter = retryAfter;
+  }
+  retryAfter;
+};
+function countPaidCall(max, now = Date.now()) {
+  const window = Math.floor(now / windowMs);
+  if (window !== paidWindow) {
+    paidWindow = window;
+    paidCalls = 0;
+  }
+  if (paidCalls >= max)
+    throw new PaidCallLimit(Math.ceil(((window + 1) * windowMs - now) / 1e3));
+  paidCalls++;
 }
 function rateTicket(cookie, secret, max, now = Date.now()) {
   const window = Math.floor(now / 6e4);
@@ -348,17 +384,20 @@ async function handler(req, res) {
     res.statusCode = status;
     res.end(JSON.stringify(data));
   };
-  if (req.method === "GET") {
-    let destination = "\u672A\u8A2D\u5B9A";
-    try {
-      destination = new URL(process.env.AI_BASE_URL || "").origin;
-    } catch {
-    }
-    return reply(200, {
-      provider: process.env.AI_PROVIDER || "mock",
-      destination
+  const limited = (retryAfter) => {
+    res.setHeader("Retry-After", String(retryAfter));
+    return reply(429, {
+      error: "\u56DE\u6570\u306E\u4E0A\u9650\u3067\u3059\u3002\u5C11\u3057\u4F11\u3093\u3067\u304B\u3089\u304A\u8A66\u3057\u304F\u3060\u3055\u3044\u3002\u4E0B\u66F8\u304D\u306F\u6B8B\u3063\u3066\u3044\u307E\u3059\u3002"
     });
-  }
+  };
+  const secret = process.env.RATE_LIMIT_SECRET;
+  const rateConfigured = !!secret && secret.length >= 32;
+  const destination = rateConfigured ? getPaidDestination() : null;
+  if (req.method === "GET")
+    return reply(200, {
+      provider: destination ? "openai" : "mock",
+      destination: destination ?? "\u672A\u8A2D\u5B9A"
+    });
   if (req.method !== "POST") {
     res.setHeader("Allow", "GET, POST");
     return reply(405, { error: "\u9001\u4FE1\u65B9\u6CD5\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002" });
@@ -382,10 +421,14 @@ async function handler(req, res) {
     });
   }
   const real = process.env.AI_PROVIDER && process.env.AI_PROVIDER !== "mock";
-  const secret = process.env.RATE_LIMIT_SECRET;
-  if (real && (!secret || secret.length < 32))
+  if (real && !rateConfigured)
     return reply(503, {
       error: "\u56DE\u6570\u5236\u9650\u306E\u30B5\u30FC\u30D0\u30FC\u8A2D\u5B9A\u304C\u5FC5\u8981\u3067\u3059\u3002\u9375\u306A\u3057\u3067\u8A66\u3059\u3053\u3068\u3082\u3067\u304D\u307E\u3059\u3002"
+    });
+  const confirmedDestination = req.headers["x-ayumi-destination"];
+  if ((real || confirmedDestination !== void 0) && (!destination || destination !== confirmedDestination))
+    return reply(409, {
+      error: "AI \u306E\u9001\u308A\u5148\u3092\u78BA\u8A8D\u3057\u76F4\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u5165\u529B\u306F\u6B8B\u3063\u3066\u3044\u307E\u3059\u3002"
     });
   const rate = rateTicket(
     req.headers.cookie,
@@ -401,15 +444,20 @@ async function handler(req, res) {
   if (!rate.allowed || real && !ipTicket(
     hash,
     Math.min(600, Math.max(1, Number(process.env.IP_RATE_MAX) || 60))
-  )) {
-    res.setHeader("Retry-After", real ? "600" : String(rate.retryAfter));
-    return reply(429, {
-      error: "\u56DE\u6570\u306E\u4E0A\u9650\u3067\u3059\u3002\u5C11\u3057\u4F11\u3093\u3067\u304B\u3089\u304A\u8A66\u3057\u304F\u3060\u3055\u3044\u3002\u4E0B\u66F8\u304D\u306F\u6B8B\u3063\u3066\u3044\u307E\u3059\u3002"
-    });
-  }
+  ))
+    return limited(real ? 600 : rate.retryAfter);
   try {
-    return reply(200, await runOperation(op, createProvider()));
-  } catch {
+    const maximum = Math.min(
+      600,
+      Math.max(1, Math.floor(Number(process.env.AI_CALL_RATE_MAX) || 80))
+    );
+    const provider = real ? createProvider(process.env, (...args) => {
+      countPaidCall(maximum);
+      return fetch(...args);
+    }) : createProvider();
+    return reply(200, await runOperation(op, provider));
+  } catch (error) {
+    if (error instanceof PaidCallLimit) return limited(error.retryAfter);
     return reply(502, {
       error: "AI \u306E\u6574\u7406\u3092\u78BA\u8A8D\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F\u3002\u5165\u529B\u306F\u6B8B\u3063\u3066\u3044\u307E\u3059\u3002\u6587\u3092\u77ED\u304F\u3059\u308B\u304B\u3001\u9375\u306A\u3057\u3067\u8A66\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
     });

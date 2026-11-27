@@ -9,9 +9,9 @@ import {
 export const datePattern =
   /(?:昭和|平成|令和)(?:元|\d{1,2})年(?:\d{1,2}月)?(?:\d{1,2}日)?|\d{4}年(?:\d{1,2}月)?(?:\d{1,2}日)?|\d{4}[-/]\d{1,2}(?:[-/]\d{1,2})?|現在|今日/g;
 function care(s: string) {
-  const { yes, no } = careSignals(s);
+  const { yes, no, unclear } = careSignals(s);
   return {
-    value: yes && no ? "unknown" : no ? "no" : yes ? "yes" : "unknown",
+    value: unclear || yes === no ? "unknown" : yes ? "yes" : "no",
     quote: s,
   };
 }
@@ -74,8 +74,9 @@ export function mockExtract(text: string) {
           ? evidence(s.slice(first.index!, last.index! + last[0].length).trim())
           : empty();
       };
+      // 医療機関名の候補は、連続する文字列の先頭から一度だけ調べる。
       const h = s.match(
-        /([A-Za-zＡ-Ｚａ-ｚ一-龠ぁ-んァ-ヶ〇ー]+(?:クリニック|病院|医院|診療所))/,
+        /(?<![A-Za-zＡ-Ｚａ-ｚ一-龠ぁ-んァ-ヶ〇ー])[A-Za-zＡ-Ｚａ-ｚ一-龠ぁ-んァ-ヶ〇ー]+(?:クリニック|病院|医院|診療所)/,
       );
       const period: Period = {
         id: `e${i + 1}`,
@@ -83,7 +84,7 @@ export function mockExtract(text: string) {
         start,
         end,
         care: care(s),
-        hospital: h ? evidence(h[1]) : empty(),
+        hospital: h && h[0].length <= 200 ? evidence(h[0]) : empty(),
         daily: find(
           /起き|眠|食事|家事|入浴|外出|買い物|生活|着替|学校|掃除|歩|痛|疲|不安|家族|介助|朝/,
         ),

@@ -1,12 +1,23 @@
-// Conservative lexical check, not a medical judgment. Mixed states need separate periods.
+// 受診の有無は、明確な表現が一方だけにある場合に確定する。
 export function careSignals(text: string) {
   const no =
     /(?:受診|通院)(?:していなかった|していない|しなかった|なし|せず)|未受診|病院には行かなかった/.test(
       text,
     );
   const yes =
-    /(?:受診|通院)(?:した|していた|している|を続け|中)|初めて受診|初診|入院|診察を受け|病院に通|通っていた|通っています/.test(
+    /(?:受診|通院|入院)(?:した|していた|している|を続け(?:た|ていた|ている)|中(?!止|断))|初診(?:だった|した|を受けた)|診察を受け(?:た|ていた|ている)|通っていた|通っています/.test(
       text,
     );
-  return { yes, no };
+  const unclear =
+    (yes || no) &&
+    text
+      .split(/[。！!\n；;]/)
+      .some(
+        (sentence) =>
+          /受診|通院|初診|入院|診察|通って/.test(sentence) &&
+          /かもしれ|かどうか|(?:した|していない)か[？?]|と思う|と思われ|らしい|ようだ|予定|つもり|検討|覚えていない|分からない|わからない|不明|未確認|とは限ら|では(?:ない|なく)|(?:中|した|していた|している)ことはない/.test(
+            sentence,
+          ),
+      );
+  return { yes, no, unclear };
 }

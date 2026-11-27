@@ -13,14 +13,16 @@ export function SendPanel({
 }: {
   op: Operation;
   mode: "mock" | "live";
-  destination: string;
+  destination: string | null;
   busy: boolean;
-  submit: () => void;
+  submit: (destination: string | null) => void;
   cancel: () => void;
   step: number;
   returnsToDraft: boolean;
 }) {
   const [agree, setAgree] = useState(false);
+  const canSubmit =
+    !busy && (mode === "mock" || (agree && destination !== null));
   return (
     <section className="send-panel" aria-labelledby="send-title">
       <p className="eyebrow">
@@ -37,7 +39,7 @@ export function SendPanel({
           </strong>
           簡単な文の整理を体験できます。AI を使ったときの結果とは異なります。
         </p>
-      ) : (
+      ) : destination ? (
         <>
           <p>
             <strong>経過や回答に含まれる健康情報を AI に送ります。</strong>
@@ -51,6 +53,11 @@ export function SendPanel({
             名前・住所・電話番号は不要です。医療機関は仮名でも試せます。送信するのは下に表示した文と、整理方法の指示だけです。
           </p>
         </>
+      ) : (
+        <p role="status">
+          AI
+          の送り先を確認できるまで、同意と送信はできません。設定からこの端末で整理する方法にも切り替えられます。
+        </p>
       )}
       <details open>
         <summary>
@@ -72,6 +79,7 @@ export function SendPanel({
           <input
             type="checkbox"
             checked={agree}
+            disabled={busy || !destination}
             onChange={(e) => setAgree(e.target.checked)}
           />
           送信する内容と、AI 提供元に送ることを確認しました
@@ -81,8 +89,10 @@ export function SendPanel({
       <div className="button-row">
         <button
           className="primary"
-          disabled={busy || (mode === "live" && !agree)}
-          onClick={submit}
+          disabled={!canSubmit}
+          onClick={() => {
+            if (canSubmit) submit(destination);
+          }}
         >
           {busy
             ? "整理しています…（最長約50秒）"

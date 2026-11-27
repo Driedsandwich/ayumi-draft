@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     "RATE_LIMIT_SECRET",
     "RATE_LIMIT_MAX",
     "IP_RATE_MAX",
+    "AI_CALL_RATE_MAX",
   ])
     if (env[key] !== undefined) process.env[key] = env[key];
   return {

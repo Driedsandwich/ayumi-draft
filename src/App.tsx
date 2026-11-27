@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { restore, fresh, storageKey, type State } from "./client/storage";
+import {
+  restore,
+  fresh,
+  storageKey,
+  sourceState,
+  type State,
+} from "./client/storage";
 import { samples } from "./config/samples";
 import { analyze, applyPatches } from "./core/rules";
 import { parseOutput } from "./core/schema";
@@ -34,6 +40,23 @@ function restoreNavigation(): { selected: string; offset: number } {
   return { selected: "", offset: 0 };
 }
 type Pending = { op: Operation; purpose: "replace" | "append" | "patch" };
+async function readDestination(signal?: AbortSignal): Promise<string | null> {
+  const timeout = AbortSignal.timeout(5000);
+  try {
+    const res = await fetch("/api/analyze", {
+      cache: "no-store",
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+    });
+    if (!res.ok) return null;
+    const config = await res.json();
+    if (config?.provider !== "openai" || typeof config.destination !== "string")
+      return null;
+    const url = new URL(config.destination);
+    if (url.protocol === "https:" && url.origin === config.destination)
+      return url.origin;
+  } catch {}
+  return null;
+}
 export default function App() {
   const [navigation] = useState(restoreNavigation);
   const [loaded] = useState(restore),
@@ -43,8 +66,9 @@ export default function App() {
     [pending, setPending] = useState<Pending | null>(null),
     [busy, setBusy] = useState(false),
     [offset, setOffset] = useState(navigation.offset),
-    [config, setConfig] = useState({ provider: "mock", destination: "未設定" }),
+    [destination, setDestination] = useState<string | null>(null),
     [saved, setSaved] = useState(false);
+  const panelDestination = state.mode === "live" ? destination : null;
   const [selected, setSelected] = useState(navigation.selected);
   const [resting, setResting] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
@@ -70,21 +94,7 @@ export default function App() {
   const returnFocus = useRef<HTMLElement | null>(null);
   const change = (s: Partial<State>) => setState((prev) => ({ ...prev, ...s }));
   useEffect(() => {
-    fetch("/api/analyze", {
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((v) => {
-        if (
-          typeof v.provider === "string" &&
-          typeof v.destination === "string"
-        ) {
-          setConfig(v);
-          // 接続状況だけを更新する。整理方法は本人の選択を保つ。
-        }
-      })
-      .catch(() => {});
+    void readDestination().then(setDestination);
   }, []);
   useEffect(() => {
     try {
@@ -105,7 +115,7 @@ export default function App() {
       document.getElementById("send-title")?.focus({ preventScroll: true });
       panel.current?.scrollIntoView({ block: "start" });
     }
-  }, [pending]);
+  }, [pending, panelDestination]);
   const cancel = () => {
     generation.current++;
     abort.current?.abort();
@@ -123,8 +133,14 @@ export default function App() {
     setError("");
     setPending({ op, purpose });
   };
-  const send = async () => {
-    if (!pending || busy) return;
+  const send = async (confirmedDestination: string | null) => {
+    if (
+      !pending ||
+      busy ||
+      (state.mode === "live" &&
+        (!panelDestination || panelDestination !== confirmedDestination))
+    )
+      return;
     const task = pending;
     const version = ++generation.current;
     setBusy(true);
@@ -136,25 +152,37 @@ export default function App() {
         calls: number;
         provider: string;
       };
-      if (state.mode === "mock")
-        result = await runOperation(task.op, mockProvider);
+      if (!panelDestination) result = await runOperation(task.op, mockProvider);
       else {
+        const signal = AbortSignal.any([
+          abort.current.signal,
+          AbortSignal.timeout(52000),
+        ]);
+        const currentDestination = await readDestination(signal);
+        if (version !== generation.current) return;
+        if (currentDestination !== panelDestination) {
+          setDestination(currentDestination);
+          return;
+        }
         const res = await fetch("/api/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Ayumi-Destination": panelDestination,
+          },
           body: JSON.stringify(task.op),
-          signal: AbortSignal.any([
-            abort.current.signal,
-            AbortSignal.timeout(52000),
-          ]),
+          signal,
         });
         const payload = await res.json();
-        if (!res.ok)
+        if (version !== generation.current) return;
+        if (!res.ok) {
+          if (res.status === 409) setPending(null);
           throw Error(
             typeof payload.error === "string"
               ? payload.error
               : "接続できませんでした。",
           );
+        }
         result = {
           ...payload,
           data: parseOutput(
@@ -172,10 +200,6 @@ export default function App() {
       )
         throw Error("期間は60件までです。重複を整理してください。");
       setState((prev) => {
-        const sources =
-          task.op.kind === "extract"
-            ? [task.op.text]
-            : task.op.answers.map((a) => a.text);
         let events = prev.events;
         if (task.purpose === "patch")
           events = applyPatches(events, result.data as Patch[]);
@@ -203,13 +227,15 @@ export default function App() {
               )
                 delete answers[key];
           }
+        const originals =
+          task.purpose === "replace"
+            ? []
+            : prev.sources.slice(0, prev.extractionSourceCount);
+        if (task.op.kind === "extract") originals.push(task.op.text);
         return {
           ...prev,
           events,
-          sources:
-            task.purpose === "replace"
-              ? sources
-              : [...prev.sources, ...sources],
+          ...sourceState(originals, events),
           step: task.purpose === "append" && prev.step === 2 ? 2 : 1,
           deferred: task.purpose === "replace" ? [] : prev.deferred,
           answers,
@@ -284,10 +310,9 @@ export default function App() {
     if (isSample)
       setState({
         ...fresh(),
-        mode: config.provider === "openai" ? "live" : "mock",
+        mode: destination ? "live" : "mock",
       });
-    else
-      change({ step: 0, mode: config.provider === "openai" ? "live" : "mock" });
+    else change({ step: 0, mode: destination ? "live" : "mock" });
     setSelected("");
     setOffset(0);
     setPending(null);
@@ -478,7 +503,7 @@ export default function App() {
                     selected={selected}
                     edit={edit}
                     sample={loadSample}
-                    aiAvailable={config.provider === "openai"}
+                    aiAvailable={destination !== null}
                     prepare={() =>
                       prepare({ kind: "extract", text: state.text }, "replace")
                     }
@@ -527,13 +552,19 @@ export default function App() {
                         window.confirm(
                           "この期間を下書きから削除しますか？元の文は残ります。",
                         )
-                      )
+                      ) {
+                        const events = state.events.filter((e) => e.id !== id);
                         change({
-                          events: state.events.filter((e) => e.id !== id),
+                          events,
+                          ...sourceState(
+                            state.sources.slice(0, state.extractionSourceCount),
+                            events,
+                          ),
                           deferred: state.deferred.filter(
                             (key) => !key.split(":").includes(id),
                           ),
                         });
+                      }
                     }}
                     add={() =>
                       prepare({ kind: "extract", text: state.extra }, "append")
@@ -545,14 +576,14 @@ export default function App() {
             <div ref={panel} className="no-print">
               {pending && (
                 <SendPanel
-                  key={JSON.stringify(pending) + state.mode}
+                  key={JSON.stringify([pending, state.mode, panelDestination])}
                   op={pending.op}
                   step={state.step}
                   returnsToDraft={
                     pending.purpose === "append" && state.step === 2
                   }
                   mode={state.mode}
-                  destination={config.destination}
+                  destination={panelDestination}
                   busy={busy}
                   submit={send}
                   cancel={cancel}
@@ -638,9 +669,9 @@ export default function App() {
                 }}
               >
                 <option value="mock">AI を使わず試す（この端末で整理）</option>
-                <option value="live" disabled={config.provider !== "openai"}>
+                <option value="live" disabled={!destination}>
                   AI で整理する
-                  {config.provider !== "openai" ? "（今は利用できません）" : ""}
+                  {!destination ? "（今は利用できません）" : ""}
                 </option>
               </select>
             </label>

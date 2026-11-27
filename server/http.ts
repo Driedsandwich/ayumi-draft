@@ -2,12 +2,13 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { parseOperation } from "../src/core/schema";
 import { runOperation } from "../src/core/pipeline";
-import { createProvider } from "./providers";
+import { createProvider, getPaidDestination } from "./providers";
 type Request = IncomingMessage & { body?: unknown };
 const maxBody = 80000;
+const windowMs = 600_000;
 const windows = new Map<string, { window: number; count: number }>();
 export function ipTicket(key: string, max: number, now = Date.now()) {
-  const window = Math.floor(now / 600000);
+  const window = Math.floor(now / windowMs);
   const prev = windows.get(key);
   const count = prev?.window === window ? prev.count + 1 : 1;
   if (windows.size >= 5000) {
@@ -16,6 +17,23 @@ export function ipTicket(key: string, max: number, now = Date.now()) {
   }
   windows.set(key, { window, count });
   return count <= max;
+}
+let paidWindow = -1;
+let paidCalls = 0;
+class PaidCallLimit extends Error {
+  constructor(readonly retryAfter: number) {
+    super();
+  }
+}
+function countPaidCall(max: number, now = Date.now()) {
+  const window = Math.floor(now / windowMs);
+  if (window !== paidWindow) {
+    paidWindow = window;
+    paidCalls = 0;
+  }
+  if (paidCalls >= max)
+    throw new PaidCallLimit(Math.ceil(((window + 1) * windowMs - now) / 1000));
+  paidCalls++;
 }
 export function rateTicket(
   cookie: string | undefined,
@@ -73,16 +91,21 @@ export async function handler(req: Request, res: ServerResponse) {
     res.statusCode = status;
     res.end(JSON.stringify(data));
   };
-  if (req.method === "GET") {
-    let destination = "未設定";
-    try {
-      destination = new URL(process.env.AI_BASE_URL || "").origin;
-    } catch {}
-    return reply(200, {
-      provider: process.env.AI_PROVIDER || "mock",
-      destination,
+  const limited = (retryAfter: number) => {
+    res.setHeader("Retry-After", String(retryAfter));
+    return reply(429, {
+      error:
+        "回数の上限です。少し休んでからお試しください。下書きは残っています。",
     });
-  }
+  };
+  const secret = process.env.RATE_LIMIT_SECRET;
+  const rateConfigured = !!secret && secret.length >= 32;
+  const destination = rateConfigured ? getPaidDestination() : null;
+  if (req.method === "GET")
+    return reply(200, {
+      provider: destination ? "openai" : "mock",
+      destination: destination ?? "未設定",
+    });
   if (req.method !== "POST") {
     res.setHeader("Allow", "GET, POST");
     return reply(405, { error: "送信方法を確認してください。" });
@@ -106,10 +129,17 @@ export async function handler(req: Request, res: ServerResponse) {
     });
   }
   const real = process.env.AI_PROVIDER && process.env.AI_PROVIDER !== "mock";
-  const secret = process.env.RATE_LIMIT_SECRET;
-  if (real && (!secret || secret.length < 32))
+  if (real && !rateConfigured)
     return reply(503, {
       error: "回数制限のサーバー設定が必要です。鍵なしで試すこともできます。",
+    });
+  const confirmedDestination = req.headers["x-ayumi-destination"];
+  if (
+    (real || confirmedDestination !== undefined) &&
+    (!destination || destination !== confirmedDestination)
+  )
+    return reply(409, {
+      error: "AI の送り先を確認し直してください。入力は残っています。",
     });
   const rate = rateTicket(
     req.headers.cookie,
@@ -135,16 +165,23 @@ export async function handler(req: Request, res: ServerResponse) {
         hash,
         Math.min(600, Math.max(1, Number(process.env.IP_RATE_MAX) || 60)),
       ))
-  ) {
-    res.setHeader("Retry-After", real ? "600" : String(rate.retryAfter));
-    return reply(429, {
-      error:
-        "回数の上限です。少し休んでからお試しください。下書きは残っています。",
-    });
-  }
+  )
+    return limited(real ? 600 : rate.retryAfter);
   try {
-    return reply(200, await runOperation(op, createProvider()));
-  } catch {
+    const maximum = Math.min(
+      600,
+      Math.max(1, Math.floor(Number(process.env.AI_CALL_RATE_MAX) || 80)),
+    );
+    const provider = real
+      ? createProvider(process.env, (...args) => {
+          // 再検査も含め、提供元に送る各呼び出しを窓内の合計に数える。
+          countPaidCall(maximum);
+          return fetch(...args);
+        })
+      : createProvider();
+    return reply(200, await runOperation(op, provider));
+  } catch (error) {
+    if (error instanceof PaidCallLimit) return limited(error.retryAfter);
     return reply(502, {
       error:
         "AI の整理を確認できませんでした。入力は残っています。文を短くするか、鍵なしで試してください。",

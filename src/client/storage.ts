@@ -25,6 +25,7 @@ export type State = {
   context: Context;
   events: Period[];
   sources: string[];
+  extractionSourceCount: number;
   deferred: string[];
   answers: Record<string, string>;
   step: number;
@@ -52,6 +53,7 @@ export const fresh = (): State => ({
   },
   events: [],
   sources: [],
+  extractionSourceCount: 0,
   deferred: [],
   answers: {},
   step: 0,
@@ -63,6 +65,19 @@ export const fresh = (): State => ({
   handbook: "",
   extra: "",
 });
+export function sourceState(originals: string[], events: Period[]) {
+  const original = originals.join("\n");
+  const quotes = new Set<string>();
+  for (const period of events)
+    for (const field of fields) {
+      const quote = period[field].quote;
+      if (quote && !original.includes(quote)) quotes.add(quote);
+    }
+  return {
+    sources: [...originals, ...quotes],
+    extractionSourceCount: originals.length,
+  };
+}
 export function restore(): { state: State; error: string } {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -77,6 +92,10 @@ export function restore(): { state: State; error: string } {
       !["mock", "live"].includes(s.mode) ||
       !Array.isArray(s.sources) ||
       !s.sources.every((x) => typeof x === "string") ||
+      (s.extractionSourceCount !== undefined &&
+        (!Number.isSafeInteger(s.extractionSourceCount) ||
+          s.extractionSourceCount < 0 ||
+          s.extractionSourceCount > s.sources.length)) ||
       !Array.isArray(s.events) ||
       s.events.length > 60 ||
       !s.context ||
@@ -104,7 +123,7 @@ export function restore(): { state: State; error: string } {
       )
         throw Error();
       ids.add(e.id);
-      for (const f of fields) parseEvidence(e[f], f, all);
+      for (const f of fields) e[f] = parseEvidence(e[f], f, all);
     }
     for (const snap of s.snapshots) {
       if (
@@ -118,10 +137,23 @@ export function restore(): { state: State; error: string } {
       )
         throw Error();
     }
+    // 以前の保存形式から、最初の経過と現在の下書きを支える原文を引き継ぐ。
+    const originals =
+      s.extractionSourceCount === undefined
+        ? [
+            ...new Set([
+              ...s.sources.slice(0, 1),
+              ...s.events
+                .map((e) => e.sourceQuote)
+                .filter((quote) => !s.sources[0]?.includes(quote)),
+            ]),
+          ]
+        : s.sources.slice(0, s.extractionSourceCount);
     return {
       state: {
         ...fresh(),
         ...s,
+        ...sourceState(originals, s.events),
         context: { ...s.context, today: localToday() },
       },
       error: "",
